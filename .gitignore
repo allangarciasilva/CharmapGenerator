@@ -1,0 +1,5 @@
+venv/
+images/
+screens/
+__pycache__/
+generated/

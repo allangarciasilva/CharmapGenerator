@@ -2,7 +2,10 @@ import pygame, sys
 from os import walk
 import os.path
 from imageFilesFunctions import generateChar, import_folders, joinImage, joinPersona
-from charmap import charmap, charmapDescription
+import charmap_operations
+
+save_as_64bit_wide = False
+charmap, charmapDescription = charmap_operations.read_charmap_and_description()
 
 def updateColors(color):
   create_selects(color)
@@ -220,6 +223,8 @@ class Button(pygame.sprite.Sprite):
       self.loadScreen()
     elif self.text == 'Gerar Personagem':
       self.generatePersona()
+    elif self.text == "Usar 64 bits":
+      self.toggle64bitmode()
   
   def saveChange(self):
     if pygame.mouse.get_pressed()[0] and self.rect.collidepoint(pygame.mouse.get_pos()):
@@ -242,19 +247,15 @@ class Button(pygame.sprite.Sprite):
       charmap[indexAux] = newCharmap
       updateCharacter(colorAux, indexAux)
 
+  def toggle64bitmode(self):
+    if pygame.mouse.get_pressed()[0] and self.rect.collidepoint(pygame.mouse.get_pos()):
+      global save_as_64bit_wide
+      save_as_64bit_wide = not save_as_64bit_wide
+      self.image.fill(get_button_color(save_as_64bit_wide))
+
   def generateCharmap(self):
     if pygame.mouse.get_pressed()[0] and self.rect.collidepoint(pygame.mouse.get_pos()):
-      charmapFile = open("charmap.mif", 'w+')
-      charmapFile.writelines('WIDTH=8;\nDEPTH=1024;\n\nADDRESS_RADIX=UNS;\nDATA_RADIX=BIN;\n\nCONTENT BEGIN\n\n')
-
-      for index, char in enumerate(charmap):
-        charmapFile.writelines(f'-- [{index}] {charmapDescription[index]}\n')
-        for index_row, row in enumerate(char):
-          charmapFile.writelines(f'	{index*8 + index_row}  :   {row};\n')
-        charmapFile.writelines('\n')
-      charmapFile.writelines('END;')
-      charmapFile.close()
-      generateCharmapSong.play()
+      charmap_operations.save_charmap_and_description(charmap, charmapDescription, save_as_64bit_wide)
   
   def generateScreen(self):
     if pygame.mouse.get_pressed()[0] and self.rect.collidepoint(pygame.mouse.get_pos()):
@@ -416,7 +417,7 @@ class Matrix(pygame.sprite.Sprite):
 
 pygame.init()
 screen_x = 450 * 2
-screen_y = 350 * 2
+screen_y = 360 * 2 + 5
 screen = pygame.display.set_mode((screen_x, screen_y))
 pygame.display.set_caption('Gerador de tela Assembly ICMC')
 pygame.display.set_icon(pygame.image.load('icon.png').convert_alpha())
@@ -516,12 +517,21 @@ matrix_group = pygame.sprite.Group()
 characterSelected_group = pygame.sprite.Group()
 
 # Add button
-button_group.add(Button(710, 500, 'Gerar Tela', (119, 221, 119), 160, 35, 25))
-button_group.add(Button(710, 545, 'Importar Tela', (119, 221, 119), 160, 35, 25))
-button_group.add(Button(710, 590, 'Gerar Charmap', (119, 221, 119), 160, 35, 25))
-button_group.add(Button(710, 635, 'Gerar Personagem', (119, 221, 119), 160, 35, 25))
-button_group.add(Button(710, 390, 'Salvar Alteração', (119, 221, 119), 135, 25, 20))
+button_green = (119, 221, 119)
+button_red = (255, 0, 0)
+
+def get_button_color(state: bool):
+  if state:
+    return button_green
+  return button_red
+
+button_group.add(Button(710, 500, 'Gerar Tela', button_green, 160, 35, 25))
+button_group.add(Button(710, 545, 'Importar Tela', button_green, 160, 35, 25))
+button_group.add(Button(710, 590, 'Gerar Charmap', button_green, 160, 35, 25))
+button_group.add(Button(710, 635, 'Gerar Personagem', button_green, 160, 35, 25))
+button_group.add(Button(710, 390, 'Salvar Alteração', button_green, 135, 25, 20))
 button_group.add(Button(30, 650, 'Apagar Tela', (194, 59, 34), 135, 25, 20))
+button_group.add(Button(710, 680, "Usar 64 bits", get_button_color(save_as_64bit_wide), 160, 35, 25))
 
 # Add character
 xstart = 30

@@ -19,7 +19,7 @@ def read_charmap_from_mif(filepath: str):
     charmap = binary_content.tolist()
     for char in charmap:
         for index, row in enumerate(char):
-            char[index] = "".join(map(str, row))
+            char[index] = "".join(map(str, row))[::-1]
     return charmap
 
 
@@ -30,7 +30,7 @@ def save_charmap_to_mif(charmap: List[List[str]], filepath: str, as_64bit_wide: 
     for char in charmap:
         bin_charmap.append([])
         for row in char:
-            bin_row = [int(element) for element in row]
+            bin_row = [int(element) for element in row[::-1]]
             bin_charmap[-1].append(bin_row)
 
     bin_charmap = np.array(bin_charmap).reshape(-1, width)
